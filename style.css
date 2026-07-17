@@ -1,0 +1,201 @@
+/* 全体のリセットと背景 */
+body {
+    font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;
+    background-color: #f5f7fa;
+    color: #2c3e50;
+    margin: 0;
+    padding: 20px;
+}
+
+h1 {
+    text-align: center;
+    font-size: 2.8rem;               /* タイトルを大きく太く */
+    font-weight: 800;
+    letter-spacing: 2px;             /* 文字の間隔を少し広げてロゴっぽく */
+    background: linear-gradient(135deg, #2980b9, #3498db); /* 爽やかなブルーのグラデーション */
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent; /* 文字色をグラデーションにする魔法 */
+    margin-top: 30px;
+    margin-bottom: 35px;
+    filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.1)); /* ほんのり影をつけて立体的に */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+}
+
+/* ヘルプの❓マークがグラデーションで消えないように個別に色を指定 */
+h1 span {
+    -webkit-text-fill-color: #3498db !important;
+    font-size: 1.5rem;
+    transition: transform 0.2s;
+}
+
+h1 span:hover {
+    transform: scale(1.2); /* マウスを乗せるとぷるっと大きく */
+}
+
+/* 入力エリアの横並びUI */
+.input-area {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    margin-bottom: 30px;
+    justify-content: center;
+}
+
+.input-area input, .input-area button {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.95rem;
+}
+
+.input-area input[type="text"] {
+    flex: 1;
+    min-width: 150px;
+}
+
+.input-area button {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.2s;
+}
+
+.input-area button:hover {
+    background-color: #2980b9;
+}
+
+/* タイムラインのレイアウト */
+.date-header {
+    margin-top: 30px;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.day-badge {
+    background-color: #3498db;
+    color: white;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: bold;
+}
+
+.date-text {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.week-text {
+    color: #7f8c8d;
+    font-size: 1rem;
+}
+
+/* 予定カードの共通デザイン */
+.plan-item {
+    background: white;
+    padding: 15px;
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-left: 5px solid #bdc3c7;
+}
+
+.plan-content {
+    flex: 1;
+}
+
+.plan-main {
+    display: flex;
+    align-items: center;
+}
+
+.time-text {
+    font-weight: bold;
+    color: #2c3e50;
+    min-width: 80px;
+}
+
+.place-text {
+    font-size: 1.05rem;
+    font-weight: 500;
+}
+
+.plan-memo {
+    margin-top: 5px;
+    font-size: 0.85rem;
+    color: #7f8c8d;
+    padding-left: 90px;
+}
+
+.memo-link {
+    color: #3498db;
+    text-decoration: none;
+}
+
+.memo-link:hover {
+    text-decoration: underline;
+}
+
+/* スポット・移動のデザイン */
+.spot-item {
+    border-left-color: #2ecc71;
+}
+
+/* 🌟 ここを修正：色を青色、太さを 3px に統一 */
+.route-item {
+    border-left: 3px dashed #3498db !important;
+    background-color: #fcfdfe;
+    position: relative;
+    left: -1px; /* 👈 ここにこれを追加してください */
+}
+
+/* 【新設】ホテル（宿泊）用の専用デザイン */
+.hotel-checkin-item {
+    border-left: 5px solid #f39c12 !important; /* 温かみのあるオレンジ */
+    background-color: #fff9f0 !important;      /* 優しい暖色の背景 */
+}
+
+.hotel-checkout-item {
+    border-left: 5px solid #34495e !important;
+    background-color: #f8f9fa !important;
+}
+
+/* 操作ボタン（編集・削除） */
+.btn-group {
+    display: flex;
+    gap: 5px;
+}
+
+.edit-btn, .delete-btn {
+    padding: 4px 8px;
+    font-size: 0.8rem;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.edit-btn {
+    background-color: #ebf5fb;
+    color: #2980b9;
+}
+
+.delete-btn {
+    background-color: #fdf2f2;
+    color: #e74c3c;
+}
