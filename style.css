@@ -171,9 +171,22 @@ h1 span:hover {
     background-color: #fff9f0 !important;      /* 優しい暖色の背景 */
 }
 
-.hotel-checkout-item {
-    border-left: 5px solid #34495e !important;
-    background-color: #f8f9fa !important;
+.hotel-checkin-item {
+    border-left: 5px solid #f39c12 !important;
+    background-color: #fff9f0 !important;
+}
+
+/* 食事モードのアクティブ状態 */
+#mealToggleBtn.active {
+    border-color: #e67e22 !important;
+    background-color: #fffaf0 !important;
+    opacity: 1 !important;
+}
+
+/* 食事用カードのデザイン */
+.meal-item {
+    border-left: 5px solid #e67e22 !important;
+    background-color: #fff7ed !important;
 }
 
 /* 操作ボタン（編集・削除） */

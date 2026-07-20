@@ -1,11 +1,18 @@
 let travelPlan = [];
 let editIndex = -1;
 let isHotelModeActive = false;
+let isMealModeActive = false;
 
-// ローカルストレージからデータを読み込む
+// ローカルストレージからの読み込み
 if (localStorage.getItem("travelPlan")) {
     travelPlan = JSON.parse(localStorage.getItem("travelPlan"));
 }
+
+// 読み込み時の初期化
+window.onload = function() {
+    displayPlan();
+    calculateBudget();
+};
 
 function saveAndRefresh() {
     localStorage.setItem("travelPlan", JSON.stringify(travelPlan));
@@ -13,24 +20,58 @@ function saveAndRefresh() {
     calculateBudget(); // 🌟 ここを追加
 }
 
-window.onload = function() {
-    displayPlan();
-    calculateBudget(); // 🌟 ここを追加
-};
-
 function toggleHotelMode() {
-    const btn = document.getElementById("hotelToggleBtn");
     isHotelModeActive = !isHotelModeActive;
+    if (isHotelModeActive) isMealModeActive = false;
 
-    if (isHotelModeActive) {
-        btn.style.opacity = "1";
-        btn.style.borderColor = "#f39c12";
-        btn.style.backgroundColor = "#fff9f0";
-    } else {
-        btn.style.opacity = "0.4";
-        btn.style.borderColor = "#ccc";
-        btn.style.backgroundColor = "transparent";
-    }
+    const mealBtn = document.getElementById("mealToggleBtn");
+    const hotelBtn = document.getElementById("hotelToggleBtn");
+
+    // ホテルボタンの切り替え
+    hotelBtn.style.border = isHotelModeActive ? "1px solid #f39c12" : "1px solid #ccc";
+    hotelBtn.style.boxShadow = isHotelModeActive ? "0 0 0 1px #f39c12" : "none";
+    hotelBtn.style.backgroundColor = isHotelModeActive ? "#fff9f0" : "transparent";
+    hotelBtn.style.opacity = isHotelModeActive ? "1" : "0.4";
+
+    // 食事ボタンを非選択状態へ
+    mealBtn.style.border = "1px solid #ccc";
+    mealBtn.style.boxShadow = "none";
+    mealBtn.style.backgroundColor = "transparent";
+    mealBtn.style.opacity = "0.4";
+}
+
+function toggleMealMode() {
+    isMealModeActive = !isMealModeActive;
+    if (isMealModeActive) isHotelModeActive = false;
+
+    const mealBtn = document.getElementById("mealToggleBtn");
+    const hotelBtn = document.getElementById("hotelToggleBtn");
+
+    // 食事ボタンの切り替え
+    mealBtn.style.border = isMealModeActive ? "1px solid #e67e22" : "1px solid #ccc";
+    mealBtn.style.boxShadow = isMealModeActive ? "0 0 0 1px #e67e22" : "none";
+    mealBtn.style.backgroundColor = isMealModeActive ? "#fff7ed" : "transparent";
+    mealBtn.style.opacity = isMealModeActive ? "1" : "0.4";
+
+    // ホテルボタンを非選択状態へ
+    hotelBtn.style.border = "1px solid #ccc";
+    hotelBtn.style.boxShadow = "none";
+    hotelBtn.style.backgroundColor = "transparent";
+    hotelBtn.style.opacity = "0.4";
+}
+
+function resetButtons() {
+    const mealBtn = document.getElementById("mealToggleBtn");
+    const hotelBtn = document.getElementById("hotelToggleBtn");
+    
+    // 強制的にデフォルトの見た目に戻す
+    mealBtn.style.border = "1px solid #ccc";
+    mealBtn.style.backgroundColor = "transparent";
+    mealBtn.style.opacity = "0.4";
+    
+    hotelBtn.style.border = "1px solid #ccc";
+    hotelBtn.style.backgroundColor = "transparent";
+    hotelBtn.style.opacity = "0.4";
 }
 
 // ユニークID生成用
@@ -44,47 +85,42 @@ function addDestination() {
     const startElement = document.getElementById("startTime");
     const endValueDateElement = document.getElementById("endValueDate"); 
     const endElement = document.getElementById("endTime");
-    const inputElement = document.getElementById("newDestination");
-    const memoElement = document.getElementById("newMemo");
-    
+    const inputElement = document.getElementById("newDestination"); // 左の入力欄
+    const memoElement = document.getElementById("newMemo");         // 右の入力欄
+
     const inputDate = dateElement.value;
     const startTime = startElement.value;
     const endDate = endValueDateElement.value; 
     const endTime = endElement.value;
-    const rawPlace = inputElement.value;
+    const placeValue = inputElement.value; 
     const newMemo = memoElement.value;
+    const isMealMode = isMealModeActive;
 
-    if (rawPlace !== "") {
+    // 【追加】メモ欄から金額を抽出 (\数字 の形式)
+    let cost = 0;
+    const match = newMemo.match(/\\(\d+)/);
+    if (match) {
+        cost = parseInt(match[1], 10);
+    }
+
+    // 行き先または店名が入っているかチェック
+    if (placeValue !== "") {
         if (editIndex === -1) {
             // 新規登録
-            if (rawPlace.includes("~")) {
-                const steps = parseRouteText(rawPlace);
+            if (placeValue.includes("~")) {
+                const steps = parseRouteText(placeValue);
                 const sTime = steps.length > 1 ? (steps[0].meta.startTime || "") : "";
                 const eTime = steps.length > 1 ? (steps[steps.length - 1].meta.endTime || "") : "";
-
-                const routeItem = {
-                    id: generateId(),
-                    date: inputDate,
-                    startTime: sTime || startTime, // 移動データ自体にも時間を持たせる
-                    endDate: endDate,
-                    endTime: endTime || eTime,     
-                    place: rawPlace, 
-                    memo: newMemo,
-                    isHotel: false,
-                    isRouteOnly: true
-                };
-                travelPlan.push(routeItem);
+                travelPlan.push({
+                    id: generateId(), date: inputDate, startTime: sTime || startTime, endDate: endDate,
+                    endTime: endTime || eTime, place: placeValue, memo: newMemo, cost: cost,
+                    isHotel: false, isMeal: false, isRouteOnly: true
+                });
             } else {
                 const itemData = { 
-                    id: generateId(),
-                    date: inputDate, 
-                    startTime: startTime, 
-                    endDate: endDate, 
-                    endTime: endTime, 
-                    place: rawPlace,
-                    memo: newMemo,
-                    isHotel: isHotelModeActive,
-                    isRouteOnly: false
+                    id: generateId(), date: inputDate, startTime: startTime, endDate: endDate, 
+                    endTime: endTime, place: placeValue, memo: newMemo, cost: cost,
+                    isHotel: isHotelModeActive, isMeal: isMealMode, isRouteOnly: false
                 };
                 travelPlan.push(itemData);
             }
@@ -94,45 +130,136 @@ function addDestination() {
             travelPlan[editIndex].startTime = startTime;
             travelPlan[editIndex].endDate = endDate;
             travelPlan[editIndex].endTime = endTime;
-            travelPlan[editIndex].place = rawPlace;
+            travelPlan[editIndex].place = placeValue; 
             travelPlan[editIndex].memo = newMemo;
+            travelPlan[editIndex].cost = cost; // 金額も更新
             travelPlan[editIndex].isHotel = isHotelModeActive;
+            travelPlan[editIndex].isMeal = isMealMode;
             
-            if (rawPlace.includes("~")) {
-                const steps = parseRouteText(rawPlace);
+            if (placeValue.includes("~")) {
+                const steps = parseRouteText(placeValue);
                 travelPlan[editIndex].startTime = steps.length > 1 ? (steps[0].meta.startTime || "") : startTime;
                 travelPlan[editIndex].endTime = steps.length > 1 ? (steps[steps.length - 1].meta.endTime || "") : endTime;
                 travelPlan[editIndex].isRouteOnly = true;
             } else {
                 travelPlan[editIndex].isRouteOnly = false;
             }
-
             editIndex = -1;
-            const btn = document.getElementById("submitBtn");
-            btn.innerText = "追加";
-            btn.style.backgroundColor = "#3498db";
+            document.getElementById("submitBtn").innerText = "追加";
         }
 
-        // 🌟 ここで移動ルートから出発地・到着地ピンの自動生成＆「データ自体」への時刻書き込みを行う
         syncRouteTimes(inputDate);
-        
-        // ソート処理
         sortTravelPlan();
+        
+        // 外部関数で集計を更新（updateTotalsを作成して呼んでください）
+        if (typeof updateTotals === 'function') updateTotals();
 
-        // フォームのリセット
-        startElement.value = "";
-        endValueDateElement.value = ""; 
-        endValueDateElement.style.display = "none"; 
-        endElement.value = "";
-        inputElement.value = "";
+        // フォームリセット
+        startElement.value = ""; 
+        inputElement.value = ""; 
         memoElement.value = "";
         
-        isHotelModeActive = true; 
-        toggleHotelMode();
+        if (isHotelModeActive) toggleHotelMode();
+        if (isMealMode) toggleMealMode(); 
         
         saveAndRefresh();
     } else {
-        alert("「行き先」は必ず入力してください！");
+        alert("「目的地」または「食事の店名」を入力してください！");
+    }
+}
+
+// --- 予算集計ロジック ---
+function updateTotals() {
+    let traffic = 0, meal = 0, hotel = 0, other = 0;
+
+    travelPlan.forEach(item => {
+        const cost = item.cost || 0;
+        // モードまたはルート情報に基づいて振り分け
+        if (item.isMeal) {
+            meal += cost;
+        } else if (item.isHotel) {
+            hotel += cost;
+        } else if (item.isRouteOnly) {
+            traffic += cost;
+        } else {
+            other += cost;
+        }
+    });
+
+    // HTMLの各IDへ数値を反映
+    const setCost = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.innerText = `￥${val.toLocaleString()}`;
+    };
+
+    setCost("total-transport-cost", traffic);
+    setCost("total-meal-cost", meal);
+    setCost("total-hotel-cost", hotel);
+    setCost("total-other-cost", other);
+    setCost("totalCost", traffic + meal + hotel + other);
+}
+
+// --- 目的地追加/保存処理 ---
+function addDestination() {
+    const dateElement = document.getElementById("newDate");
+    const startElement = document.getElementById("startTime");
+    const endValueDateElement = document.getElementById("endValueDate"); 
+    const endElement = document.getElementById("endTime");
+    const inputElement = document.getElementById("newDestination");
+    const memoElement = document.getElementById("newMemo");
+
+    const inputDate = dateElement.value;
+    const startTime = startElement.value;
+    const endDate = endValueDateElement.value; 
+    const endTime = endElement.value;
+    const placeValue = inputElement.value; 
+    const newMemo = memoElement.value;
+    const isMealMode = isMealModeActive;
+
+    // メモ欄から \数字 の形式で金額を抽出
+    let cost = 0;
+    const match = newMemo.match(/\\(\d+)/);
+    if (match) {
+        cost = parseInt(match[1], 10);
+    }
+
+    if (placeValue !== "") {
+        if (editIndex === -1) {
+            // 新規登録
+            const itemData = { 
+                id: generateId(), date: inputDate, startTime: startTime, endDate: endDate, 
+                endTime: endTime, place: placeValue, memo: newMemo, cost: cost,
+                isHotel: isHotelModeActive, isMeal: isMealMode, isRouteOnly: placeValue.includes("~")
+            };
+            travelPlan.push(itemData);
+        } else {
+            // 編集保存
+            travelPlan[editIndex].date = inputDate;
+            travelPlan[editIndex].startTime = startTime;
+            travelPlan[editIndex].endDate = endDate;
+            travelPlan[editIndex].endTime = endTime;
+            travelPlan[editIndex].place = placeValue; 
+            travelPlan[editIndex].memo = newMemo;
+            travelPlan[editIndex].cost = cost;
+            travelPlan[editIndex].isHotel = isHotelModeActive;
+            travelPlan[editIndex].isMeal = isMealMode;
+            travelPlan[editIndex].isRouteOnly = placeValue.includes("~");
+            
+            editIndex = -1;
+            document.getElementById("submitBtn").innerText = "追加";
+        }
+
+        syncRouteTimes(inputDate);
+        sortTravelPlan();
+        updateTotals(); // ここで集計を更新
+        saveAndRefresh();
+
+        // フォームリセット
+        startElement.value = ""; inputElement.value = ""; memoElement.value = "";
+        if (isHotelModeActive) toggleHotelMode();
+        if (isMealMode) toggleMealMode(); 
+    } else {
+        alert("「目的地」または「食事の店名」を入力してください！");
     }
 }
 
@@ -420,202 +547,88 @@ function displayPlan() {
     const outputDiv = document.getElementById("output");
     outputDiv.innerHTML = "";
     
-    let activePlans = travelPlan
-        .map((item, idx) => ({ ...item, originalIndex: idx }))
-        .filter(item => item.date !== "");
-
-    let renderablePlans = activePlans.filter(p => !p.isRouteOnly);
-
-    // 移動データと目的地（終点）の紐付けマップを作成
-    let routeConnections = {};
-    activePlans.forEach(plan => {
-        if (plan.isRouteOnly) {
-            const steps = parseRouteText(plan.place);
-            if (steps.length > 1) {
-                const finalEndPlaceName = steps[steps.length - 1].place;
-
-                const matchedDestination = renderablePlans.find(
-                    p => p.place === finalEndPlaceName && p.date === plan.date
-                );
-
-                if (matchedDestination && !routeConnections[matchedDestination.id]) {
-                    routeConnections[matchedDestination.id] = {
-                        steps: steps,
-                        originalIndex: plan.originalIndex
-                    };
-                }
-            }
-        }
-    });
-
-    let tripStartDate = renderablePlans.length > 0 ? renderablePlans.map(p => p.date).sort()[0] : "";
-    let lastDate = "";
-    const weekChars = ["日", "月", "火", "水", "木", "金", "土"];
-
-    renderablePlans.forEach((item) => {
-        // 日付ヘッダー
-        if (item.date !== lastDate) {
-            let dayCountDisplay = "";
-            if (tripStartDate) {
-                const start = new Date(tripStartDate);
-                const current = new Date(item.date);
-                const diffDays = Math.floor((current - start) / (1000 * 60 * 60 * 24)) + 1;
-                dayCountDisplay = `${diffDays}日目`;
-            }
-            const d = new Date(item.date);
-            outputDiv.innerHTML += `
-                <div class="date-header">
-                    <span class="day-badge">${dayCountDisplay}</span>
-                    <span class="date-text">${d.getMonth() + 1}/${d.getDate()} <span class="week-text">(${weekChars[d.getDay()]})</span></span>
-                </div>
-            `;
-            lastDate = item.date;
-        }
-
-        // 移動アコーディオンの差し込み
-        const connectedRoute = routeConnections[item.id];
-        if (connectedRoute) {
-            let totalCost = 0;
-            connectedRoute.steps.forEach(step => { if(step.meta.cost) totalCost += step.meta.cost; });
-            const costLabel = totalCost > 0 ? ` / ￥${totalCost.toLocaleString()}` : "";
-            const gapPanel = buildGapRoutePanel(connectedRoute.steps, connectedRoute.originalIndex);
-
-            const routeIdx = connectedRoute.originalIndex;
-
-            outputDiv.innerHTML += `
-                <div class="route-gap-container" style="margin-left: 95px; font-family: sans-serif; position: relative;">
-                    <div style="display: flex; align-items: center; margin-left: 8px; padding: 12px 0; border-left: 3px dashed #cbd5e1; min-height: 40px; gap: 8px;">
-                        <button id="route-btn-${routeIdx}" onclick="toggleRouteCollapse(${routeIdx})" style="margin-left: 15px; padding: 4px 12px; font-size: 0.75rem; border: 1px solid #cbd5e1; border-radius: 20px; background-color: #f0f3f5; color: #475569; cursor: pointer; transition: all 0.2s; font-weight: bold; display: flex; align-items: center; gap: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
-                            <span id="route-btn-icon-${routeIdx}">▼</span> 移動詳細 (${connectedRoute.steps.length - 1}区間${costLabel})
-                        </button>
-                        <button onclick="startEdit(${routeIdx})" style="padding: 2px 8px; font-size: 0.7rem; border: 1px solid #cbd5e1; border-radius: 4px; background-color: white; color: #7f8c8d; cursor: pointer; transition: all 0.2s;">編集</button>
-                        <button onclick="deleteDestination(${routeIdx})" style="padding: 2px 8px; font-size: 0.7rem; border: 1px solid #f2dede; border-radius: 4px; background-color: #fcf8e3; color: #a94442; cursor: pointer; transition: all 0.2s;">削除</button>
-                    </div>
-                    ${gapPanel}
-                </div>
-            `;
-        }
-
-        // スポットカードの描画
-        let timeDisplay = "";
-        let customClass = "plan-item spot-item";
-        const isHotel = !!item.isHotel;
-
-        if (item.startTime === "") {
-            timeDisplay = isHotel 
-                ? `<span style="background-color: #f39c12; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold;">🏨 宿泊</span>`
-                : `<span style="background-color: #7f8c8d; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold;">🕒 フリー</span>`;
+    travelPlan.forEach((item, idx) => {
+        let cardClass = "plan-item";
+        let icon = "📍";
+        
+        if (item.isHotel) {
+            cardClass += " hotel-checkin-item";
+            icon = "🏨";
+        } else if (item.isMeal) {
+            cardClass += " meal-item";
+            icon = "🍽️";
         } else {
-            timeDisplay = isHotel ? `${item.startTime} <span style="color: #f39c12; font-size: 0.75rem; font-weight: bold;">(宿)</span>` : item.startTime;
+            cardClass += " spot-item";
+            icon = "📍";
         }
 
-        if (item.startTime !== "" && item.endTime !== "") {
-            timeDisplay += ` 〜 ${item.endTime}`;
-        }
-
-        const mainContentHtml = isHotel 
-            ? `<span class="place-text" style="margin-left: 10px;">🏨 ${item.place}</span>`
-            : `<span class="place-text" style="margin-left: 10px;">📍 ${item.place}</span>`;
-
-        let memoHtml = "";
-        if (item.memo && item.memo.trim() !== "") {
-            if (item.memo.startsWith("http://") || item.memo.startsWith("https://")) {
-                memoHtml = `<div class="plan-memo"><a href="${item.memo}" target="_blank" class="memo-link">🔗 リンクを開く</a></div>`;
-            } else {
-                memoHtml = `<div class="plan-memo">📝 ${item.memo}</div>`;
-            }
-        }
+        // 金額表示の準備（costが0より大きい場合のみ表示）
+        const costText = (item.cost && item.cost > 0) ? ` (￥${item.cost.toLocaleString()})` : "";
 
         outputDiv.innerHTML += `
-            <div class="${customClass}">
+            <div class="${cardClass}">
                 <div class="plan-content">
-                    <div class="plan-main" style="align-items: flex-start;">
-                        <span class="time-text" style="margin-top: 2px;">${timeDisplay}</span>
-                        ${mainContentHtml}
+                    <div class="plan-main">
+                        <span class="time-text">${item.startTime || "未定"}</span>
+                        <span class="place-text" style="margin-left: 10px;">${icon} ${item.place}${costText}</span>
                     </div>
-                    ${memoHtml}
+                    ${item.memo ? `<div class="memo-text" style="margin-left: 55px; font-size: 0.85rem; color: #666;">${item.memo}</div>` : ""}
                 </div>
                 <div class="btn-group">
-                    <button onclick="startEdit(${item.originalIndex})" class="edit-btn">編集</button>
-                    <button onclick="deleteDestination(${item.originalIndex})" class="delete-btn">削除</button>
+                    <button onclick="startEdit(${idx})" class="edit-btn">編集</button>
+                    <button onclick="deleteDestination(${idx})" class="delete-btn">削除</button>
                 </div>
             </div>
         `;
     });
-
-    // --- 未定リスト (Pending) ---
-    let pendingPlans = travelPlan
-        .map((item, idx) => ({ ...item, originalIndex: idx }))
-        .filter(item => item.date === "");
-
-    if (pendingPlans.length > 0) {
-        outputDiv.innerHTML += `
-            <div class="date-header" style="margin-top: 40px; border-bottom: 2px solid #bdc3c7;">
-                <span class="day-badge" style="background-color: #7f8c8d;">未定</span>
-                <span class="date-text" style="color: #7f8c8d;">いつか行く候補リスト</span>
-            </div>
-        `;
-
-        pendingPlans.forEach(item => {
-            let infoLabel = item.startTime !== "" ? `⏰ ${item.startTime}` : `⏳ 日時未定`;
-            let memoHtml = item.memo ? `<div class="plan-memo">📝 ${item.memo}</div>` : "";
-
-            outputDiv.innerHTML += `
-                <div class="plan-item spot-item" style="margin-bottom: 8px;">
-                    <div class="plan-content">
-                        <div class="plan-main">
-                            <span class="time-text" style="color: #7f8c8d; margin-right: 15px;">${infoLabel}</span>
-                            <span class="place-text">📍 ${item.place}</span>
-                        </div>
-                        ${memoHtml}
-                    </div>
-                    <div class="btn-group">
-                        <button onclick="startEdit(${item.originalIndex})" class="edit-btn">編集</button>
-                        <button onclick="deleteDestination(${item.originalIndex})" class="delete-btn">削除</button>
-                    </div>
-                </div>
-            `;
-        });
-    }
 }
 
-function startEdit(index) {
-    editIndex = index;
-    const item = travelPlan[index];
-    
-    document.getElementById("newDate").value = item.date;
-    document.getElementById("startTime").value = item.startTime;
-    document.getElementById("endValueDate").value = item.endDate || "";
-    document.getElementById("endTime").value = item.endTime;
-    document.getElementById("newDestination").value = item.place;
-    document.getElementById("newMemo").value = item.memo;
-    
-    if (item.endDate) {
-        document.getElementById("endValueDate").style.display = "inline-block";
-    } else {
-        document.getElementById("endValueDate").style.display = "none";
-    }
+function startEdit(idx) {
+    const item = travelPlan[idx];
+    editIndex = idx;
 
-    isHotelModeActive = !!item.isHotel;
-    const btn = document.getElementById("hotelToggleBtn");
-    if (isHotelModeActive) {
-        btn.style.opacity = "1";
-        btn.style.borderColor = "#f39c12";
-        btn.style.backgroundColor = "#fff9f0";
-    } else {
-        btn.style.opacity = "0.4";
-        btn.style.borderColor = "#ccc";
-        btn.style.backgroundColor = "transparent";
-    }
-    
-    const saveBtn = document.getElementById("submitBtn"); 
-    saveBtn.innerText = "保存";
-    saveBtn.style.backgroundColor = "#e74c3c";
+    // モードを合わせる
+    if (item.isMeal !== isMealModeActive) toggleMealMode();
+    if (item.isHotel !== isHotelModeActive) toggleHotelMode();
+
+    // フォームに値を戻す
+    document.getElementById("newDate").value = item.date || "";
+    document.getElementById("startTime").value = item.startTime || "";
+    document.getElementById("endTime").value = item.endTime || "";
+    document.getElementById("endValueDate").value = item.endDate || "";
+    document.getElementById("newDestination").value = item.place || ""; // ここで左の欄に戻す
+    document.getElementById("newMemo").value = item.memo || "";
+
+    document.getElementById("submitBtn").innerText = "保存";
 }
 
 function deleteDestination(index) {
     if (confirm("本当にこの予定を削除しますか？")) {
-        travelPlan.splice(index, 1);
+        const itemToDelete = travelPlan[index];
+
+        // 削除する前に、もし消すのが「地点」なら、それに関連する移動を探して消す
+        if (!itemToDelete.isRouteOnly) {
+            // この地点の名前を持つルートを検索して削除する
+            // 複数のルートが関わっている可能性もあるので filter で判定
+            travelPlan = travelPlan.filter(item => {
+                // 移動ルートで、かつ削除する地点が名前に含まれているものは消す
+                if (item.isRouteOnly) {
+                    const steps = parseRouteText(item.place);
+                    const isRelated = steps.some(step => step.place === itemToDelete.place);
+                    return !isRelated; // 関連していれば除外（削除）
+                }
+                return true; // 移動ルート以外は残す
+            });
+        }
+
+        // 最後に指定したインデックスのアイテムを削除（インデックスがずれる可能性があるため再取得）
+        const newIndex = travelPlan.indexOf(itemToDelete);
+        if (newIndex !== -1) {
+            travelPlan.splice(newIndex, 1);
+        }
+
+        // 予算再計算と保存
+        calculateBudget();
         saveAndRefresh();
     }
 }
@@ -644,6 +657,7 @@ function toggleEndDate() {
 function showHelp() {
     document.getElementById("helpModal").style.display = "flex";
 }
+
 function closeHelp() {
     document.getElementById("helpModal").style.display = "none";
 }
@@ -665,35 +679,22 @@ function extractCostFromMemo(memoText) {
 
 // 予算を計算して画面を書き換える関数
 function calculateBudget() {
-    let transportTotal = 0;
-    let hotelTotal = 0;
-    let otherTotal = 0;
-
+    let t = 0, h = 0, m = 0, o = 0;
     travelPlan.forEach(item => {
-        if (item.isRouteOnly) {
-            // 移動ルートの場合は、parseRouteTextを使って区間ごとの金額を合計
-            const steps = parseRouteText(item.place);
-            steps.forEach(step => {
-                if (step.meta.cost) {
-                    transportTotal += step.meta.cost;
-                }
-            });
-        } else if (item.isHotel) {
-            // ホテルモードの場合は、メモから宿泊費を抽出
-            hotelTotal += extractCostFromMemo(item.memo);
-        } else {
-            // それ以外（通常スポット）の場合は、メモからその他費用を抽出
-            otherTotal += extractCostFromMemo(item.memo);
-        }
+        const match = item.memo ? item.memo.match(/[￥\\](\d+)/) : null;
+        const val = match ? parseInt(match[1]) : 0;
+        
+        if (item.isHotel) h += val;
+        else if (item.isMeal) m += val;
+        else if (item.place.includes("→")) t += val;
+        else o += val;
     });
 
-    // 画面の表示を更新（カンマ区切り）
-    document.getElementById("total-transport-cost").innerText = `￥${transportTotal.toLocaleString()}`;
-    document.getElementById("total-hotel-cost").innerText = `￥${hotelTotal.toLocaleString()}`;
-    document.getElementById("total-other-cost").innerText = `￥${otherTotal.toLocaleString()}`;
-    
-    const allTotal = transportTotal + hotelTotal + otherTotal;
-    document.getElementById("total-all-cost").innerText = `￥${allTotal.toLocaleString()}`;
+    document.getElementById("total-transport-cost").innerText = "￥" + t.toLocaleString();
+    document.getElementById("total-meal-cost").innerText = "￥" + m.toLocaleString();
+    document.getElementById("total-hotel-cost").innerText = "￥" + h.toLocaleString();
+    document.getElementById("total-other-cost").innerText = "￥" + o.toLocaleString();
+    document.getElementById("totalCost").innerText = "￥" + (t + h + m + o).toLocaleString();
 }
 
 // ==========================================
@@ -712,34 +713,30 @@ function toggleTodoList() {
 }
 
 // ローカルストレージから取得
+// --- 共通の取得用関数 ---
 function getTodoList() {
-    const list = localStorage.getItem('staypler_todolist');
-    return list ? JSON.parse(list) : [
-        { id: 1, text: "着替え", checked: false },
-        { id: 2, text: "充電器", checked: false },
-        { id: 3, text: "洗面用具", checked: false }
-    ]; // 初回のみデフォルトの3つを表示
+    return JSON.parse(localStorage.getItem('staypler_todolist') || '[]');
 }
 
-// アイテムの追加
+// --- アイテム追加 ---
 function addTodoItem() {
     const input = document.getElementById('new-todo-item');
+    const categoryInput = document.getElementById('new-todo-category');
     const text = input.value.trim();
+    const category = categoryInput.value.trim() || "その他";
+
     if (!text) return;
 
     const list = getTodoList();
-    list.push({
-        id: Date.now(),
-        text: text,
-        checked: false
-    });
-
+    list.push({ id: Date.now(), text, checked: false, category });
     localStorage.setItem('staypler_todolist', JSON.stringify(list));
+    
     input.value = '';
+    categoryInput.value = ''; 
     renderTodoList();
 }
 
-// チェック状態の切り替え
+// --- チェック切り替え ---
 function toggleTodoCheck(id) {
     const list = getTodoList();
     const item = list.find(i => i.id === id);
@@ -750,15 +747,14 @@ function toggleTodoCheck(id) {
     }
 }
 
-// アイテムの削除
+// --- アイテム削除 ---
 function deleteTodoItem(id) {
-    let list = getTodoList();
-    list = list.filter(i => i.id !== id);
+    const list = getTodoList().filter(i => i.id !== id);
     localStorage.setItem('staypler_todolist', JSON.stringify(list));
     renderTodoList();
 }
 
-// 画面への描画
+// --- 描画関数（カテゴリ分け版・ダブりなし） ---
 function renderTodoList() {
     const container = document.getElementById('todo-list-container');
     if (!container) return;
@@ -767,28 +763,29 @@ function renderTodoList() {
     container.innerHTML = '';
 
     if (list.length === 0) {
-        container.innerHTML = `<div style="color: #94a3b8; font-size: 0.85rem; text-align: center; margin-top: 20px;">リストは空っぽです</div>`;
+        container.innerHTML = `<div style="text-align: center; color: #94a3b8; margin-top: 20px;">リストは空っぽです</div>`;
         return;
     }
 
-    list.forEach(item => {
-        const itemEl = document.createElement('div');
-        itemEl.style.cssText = "display: flex; align-items: center; justify-content: space-between; padding: 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; gap: 10px; transition: all 0.2s;";
+    const categories = [...new Set(list.map(item => item.category || "その他"))];
+    
+    categories.forEach(cat => {
+        const items = list.filter(item => (item.category || "その他") === cat);
         
-        // チェックされたら背景を少し薄くする
-        if (item.checked) {
-            itemEl.style.background = "#f1f5f9";
-            itemEl.style.opacity = "0.7";
-        }
-
-        itemEl.innerHTML = `
-            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; flex: 1; font-size: 0.9rem; color: ${item.checked ? '#94a3b8' : '#334155'}; text-decoration: ${item.checked ? 'line-through' : 'none'}; user-select: none;">
-                <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleTodoCheck(${item.id})" style="width: 16px; height: 16px; cursor: pointer;">
-                <span>${item.text}</span>
-            </label>
-            <button onclick="deleteTodoItem(${item.id})" style="background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 0.85rem; padding: 2px 5px; border-radius: 4px; transition: color 0.2s;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#94a3b8'">🗑️</button>
-        `;
-        container.appendChild(itemEl);
+        container.innerHTML += `<div style="font-weight: bold; color: #475569; margin-top: 15px; border-bottom: 1px solid #e2e8f0; font-size: 0.9rem;">${cat}</div>`;
+        
+        items.forEach(item => {
+            const itemEl = document.createElement('div');
+            itemEl.style.cssText = "display: flex; align-items: center; justify-content: space-between; padding: 8px; background: white; border-bottom: 1px solid #f1f5f9;";
+            itemEl.innerHTML = `
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.9rem;">
+                    <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleTodoCheck(${item.id})">
+                    <span style="${item.checked ? 'text-decoration: line-through; color: #94a3b8;' : ''}">${item.text}</span>
+                </label>
+                <button onclick="deleteTodoItem(${item.id})" style="background: none; border: none; cursor: pointer;">🗑️</button>
+            `;
+            container.appendChild(itemEl);
+        });
     });
 }
 

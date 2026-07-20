@@ -10,22 +10,21 @@
     <h1>Staypler <span onclick="showHelp()" style="cursor: pointer; font-size: 1.2rem; vertical-align: middle;">❓</span></h1>
 
     <div class="input-area">
-        <input type="date" id="newDate">
-        
-        <input type="time" id="startTime">
-        <span style="color: #7f8c8d; align-self: center;">〜</span>
-        <input type="date" id="endValueDate" style="width: 140px; display: none;">
-        <input type="time" id="endTime">
-        
-        <button type="button" onclick="toggleEndDate()" style="background: none; border: none; color: #3498db; cursor: pointer; padding: 0 5px; font-size: 0.85rem; align-self: center; white-space: nowrap;">📅日またぎ</button>
+    <input type="date" id="newDate">
+    <input type="time" id="startTime">
+    <span style="color: #7f8c8d; align-self: center;">〜</span>
+    <input type="date" id="endValueDate" style="width: 140px; display: none;">
+    <input type="time" id="endTime">
+    <button type="button" onclick="toggleEndDate()" style="background: none; border: none; color: #3498db; cursor: pointer; padding: 0 5px; font-size: 0.85rem; align-self: center;">📅日またぎ</button>
+    <input type="text" id="newDestination" placeholder="次の目的地・移動手段">
+    
+    <!-- 🍽️食事、🏨宿泊のトグルボタン（機能用） -->
+    <button type="button" id="mealToggleBtn" onclick="toggleMealMode()" style="border: 1px solid #ccc; background-color: transparent; opacity: 0.4;">🍽️</button>
+    <button type="button" id="hotelToggleBtn" onclick="toggleHotelMode()" style="border: 1px solid #ccc; background-color: transparent; opacity: 0.4;">🏨</button>
 
-        <input type="text" id="newDestination" placeholder="次の目的地・移動手段（例：姫路駅→東横イン）">
-        
-        <button type="button" id="hotelToggleBtn" onclick="toggleHotelMode()" style="background: none; border: 1px solid #ccc; border-radius: 4px; padding: 5px 8px; cursor: pointer; font-size: 1rem; align-self: center; transition: all 0.2s; opacity: 0.4;" title="この予定を宿泊（ホテル）にする">🏨</button>
+    <input type="text" id="newMemo" placeholder="メモ または URL（金額もここに記載）">
 
-        <input type="text" id="newMemo" placeholder="メモ または URLを入力（任意）">
-        
-        <button id="submitBtn" onclick="addDestination()">追加</button>
+    <button id="submitBtn" onclick="addDestination()">追加</button>
     </div>
 
     <!-- 🌟 追記：予算集計表示エリア 🌟 -->
@@ -33,22 +32,14 @@
         <h3 style="margin: 0 0 10px 0; font-size: 1rem; color: #1e293b; display: flex; align-items: center; gap: 6px;">
             💰 旅費・予算の自動集計
         </h3>
-        <div style="display: flex; gap: 20px; flex-wrap: wrap; font-size: 0.9rem;">
-            <div style="background: white; padding: 8px 15px; border-radius: 6px; border-left: 4px solid #3498db; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                <span style="color: #64748b;">交通費：</span>
-                <span id="total-transport-cost" style="font-weight: bold; color: #1e293b;">￥0</span>
-            </div>
-            <div style="background: white; padding: 8px 15px; border-radius: 6px; border-left: 4px solid #e67e22; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                <span style="color: #64748b;">宿泊費：</span>
-                <span id="total-hotel-cost" style="font-weight: bold; color: #1e293b;">￥0</span>
-            </div>
-            <div style="background: white; padding: 8px 15px; border-radius: 6px; border-left: 4px solid #2ecc71; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                <span style="color: #64748b;">その他：</span>
-                <span id="total-other-cost" style="font-weight: bold; color: #1e293b;">￥0</span>
-            </div>
-            <div style="background: #e2e8f0; padding: 8px 15px; border-radius: 6px; font-weight: bold; margin-left: auto;">
-                <span style="color: #475569;">合計：</span>
-                <span id="total-all-cost" style="font-size: 1.1rem; color: #0f172a;">￥0</span>
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #eef2f6; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+            <div style="background: #f0f7ff; padding: 8px 15px; border-radius: 6px; border-left: 4px solid #3498db;"><span style="color: #576b85;">交通費：</span><span id="total-transport-cost" style="font-weight: bold; color: #1e293b;">￥0</span></div>
+            <div style="background: #fff7ed; padding: 8px 15px; border-radius: 6px; border-left: 4px solid #e67e22;"><span style="color: #856a57;">食事代：</span><span id="total-meal-cost" style="font-weight: bold; color: #1e293b;">￥0</span></div>
+            <div style="background: #fff9f0; padding: 8px 15px; border-radius: 6px; border-left: 4px solid #f39c12;"><span style="color: #857457;">宿泊費：</span><span id="total-hotel-cost" style="font-weight: bold; color: #1e293b;">￥0</span></div>
+            <div style="background: #f0fff4; padding: 8px 15px; border-radius: 6px; border-left: 4px solid #2ecc71;"><span style="color: #57856b;">その他：</span><span id="total-other-cost" style="font-weight: bold; color: #1e293b;">￥0</span></div>
+
+            <div style="margin-left: auto; background: #f8fafc; padding: 8px 20px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                <span style="color: #475569; font-weight: 500;">合計：</span><span id="totalCost" style="font-weight: 800; color: #1e293b; font-size: 1.1rem;">￥0</span>
             </div>
         </div>
     </div>
@@ -62,10 +53,14 @@
             <button onclick="toggleTodoList()" style="background: none; border: none; color: #bdc3c7; font-size: 1.2rem; cursor: pointer; padding: 0 5px;">❌</button>
         </div>
         
-        <!-- 入力エリア -->
-        <div style="padding: 15px; border-bottom: 1px solid #e2e8f0; display: flex; gap: 8px;">
-            <input type="text" id="new-todo-item" placeholder="必要なものを入力..." style="flex: 1; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.9rem;">
-            <button onclick="addTodoItem()" style="background: #2ecc71; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 0.9rem; font-weight: bold;">追加</button>
+        <!-- サイドバーの入力エリアを修正 -->
+        <div style="padding: 15px; border-bottom: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 8px;">
+            <input type="text" id="new-todo-item" placeholder="持ち物を入力..." style="padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px;">
+    
+            <div style="display: flex; gap: 8px;">
+                <input type="text" id="new-todo-category" placeholder="カテゴリ" style="flex: 1; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px;">
+                <button onclick="addTodoItem()" style="background: #2ecc71; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer;">追加</button>
+            </div>
         </div>
 
         <!-- リスト表示エリア -->
@@ -78,41 +73,54 @@
 
     <!-- 🧭 アップデート版ヘルプモーダル -->
     <div id="helpModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1001; justify-content: center; align-items: center;">
-        <div style="background: white; padding: 25px; border-radius: 8px; max-width: 500px; width: 90%; box-shadow: 0 4px 15px rgba(0,0,0,0.2); position: relative;">
-            <h3 style="margin-top: 0; color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 8px;">🧭 Staypler 操作ガイド</h3>
-            <div style="font-size: 0.9rem; line-height: 1.6; color: #555; max-height: 400px; overflow-y: auto;">
+    <div style="background: white; padding: 25px; border-radius: 8px; max-width: 500px; width: 90%; box-shadow: 0 4px 15px rgba(0,0,0,0.2); position: relative;">
+        <h3 style="margin-top: 0; color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 8px;">🧭 Staypler 操作ガイド</h3>
+        <div style="font-size: 0.9rem; line-height: 1.6; color: #555; max-height: 400px; overflow-y: auto;">
+            
+            <p style="margin-top: 10px; font-weight: bold; color: #2980b9;">📅 基本の予定追加</p>
+            <ul style="padding-left: 20px; margin-top: 5px;">
+                <li><strong>時間：</strong> 入力すると自動で並び替わります。空欄にするとフリー予定になります。</li>
+                <li><strong>未定リスト：</strong> 日付を入力せずに追加すると、画面最下部の「いつか行く候補リスト」にストックされます。</li>
+            </ul>
+
+            <p style="margin-top: 15px; font-weight: bold; color: #3498db;">🚉 移動ルートと交通費（コマンド入力）</p>
+            <ul style="padding-left: 20px; margin-top: 5px;">
+                <li>行き先に「<code>〜</code>」で繋いで入力します。</li>
+                <li>コマンドを頭に付けると、アイコン付きで整理されます。</li>
                 
-                <p style="margin-top: 10px; font-weight: bold; color: #2980b9;">📅 基本の予定追加</p>
-                <ul style="padding-left: 20px; margin-top: 5px;">
-                    <li><strong>時間：</strong> 入力すると自動で並び替わります。空欄にするとフリー予定になります。</li>
-                    <li><strong>未定リスト：</strong> 日付を入力せずに追加すると、画面最下部の「いつか行く候補リスト」にストックされます。</li>
-                </ul>
+                <li style="margin-top: 8px;"><strong>【コマンド一覧】</strong></li>
+                <div style="background: #f8fafc; padding: 10px; border-radius: 5px; font-size: 0.85rem; border: 1px solid #e2e8f0; margin: 5px 0;">
+                    <code>#t</code>：鉄道（Train）<br>
+                    <code>#b</code>：バス（Bus）<br>
+                    <code>#w</code>：徒歩（Walk）<br>
+                    <code>#p</code>：飛行機（Plane）<br>
+                    <code>#s</code>：船（Ship）<br>
+                    <code>指定なし</code>：通常の移動（➡️ で表示）
+                </div>
+                
+                <li style="margin-top: 8px;"><strong>入力例：</strong> <code>#t(￥540, st東京駅, at横浜駅)横浜駅</code></li>
+                <li>「<code>￥</code>」や「<code>\</code>」から始まる数字は自動で交通費に集計されます。</li>
+            </ul>
 
-                <p style="margin-top: 15px; font-weight: bold; color: #9b59b6;">バス 移動ルートと交通費</p>
-                <ul style="padding-left: 20px; margin-top: 5px;">
-                    <li>行き先に「<code>〜</code>」を含めると自動で移動ルートになります。</li>
-                    <li>ルート内に <code>540円</code> などの金額を書くと、自動でパースされて<strong>「交通費」に集計</strong>されます。</li>
-                </ul>
+            <p style="margin-top: 15px; font-weight: bold; color: #e67e22;">🏨 宿泊予定と宿泊費</p>
+            <ul style="padding-left: 20px; margin-top: 5px;">
+                <li>「🏨」ボタンをオン（オレンジ色）にして追加すると、その日の最後に配置されます。</li>
+                <li>メモ欄に数字（例: <code>12000</code>）を書くと、「宿泊費」に自動集計されます。</li>
+            </ul>
 
-                <p style="margin-top: 15px; font-weight: bold; color: #e67e22;">🏨 宿泊予定と宿泊費</p>
-                <ul style="padding-left: 20px; margin-top: 5px;">
-                    <li>「🏨」ボタンをオン（オレンジ色）にして追加すると、自動でその日の最後に配置されます。</li>
-                    <li>ホテルの予定の<strong>メモ欄に数字（例: 12000 や 12000円）を書くと、「宿泊費」に自動集計</strong>されます。</li>
-                </ul>
+            <p style="margin-top: 15px; font-weight: bold; color: #2ecc71;">💰 その他の費用</p>
+            <ul style="padding-left: 20px; margin-top: 5px;">
+                <li>通常スポットのメモ欄に数字を書くと、「その他」の費用に自動集計されます。</li>
+            </ul>
 
-                <p style="margin-top: 15px; font-weight: bold; color: #2ecc71;">💰 その他の費用（食費・お土産など）</p>
-                <ul style="padding-left: 20px; margin-top: 5px;">
-                    <li>ホテル以外の通常スポットの<strong>メモ欄に数字（例: ランチ 2500）を書くと、「その他」の費用に自動集計</strong>されます。</li>
-                </ul>
-
-                <p style="margin-top: 15px; font-weight: bold; color: #f1c40f;">💼 持ち物リスト（画面右下のボタン）</p>
-                <ul style="padding-left: 20px; margin-top: 5px;">
-                    <li>画面右下のカバンボタン（💼）を押すと、右側からチェックリストが出現します。予定を見ながら自由にアイテムを追加・削除・チェックできます。</li>
-                </ul>
-            </div>
-            <button onclick="closeHelp()" style="margin-top: 15px; padding: 8px 15px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; float: right;">閉じる</button>
+            <p style="margin-top: 15px; font-weight: bold; color: #f1c40f;">💼 持ち物リスト</p>
+            <ul style="padding-left: 20px; margin-top: 5px;">
+                <li>画面右下のカバンボタン（💼）を押すと、チェックリストが出現します。</li>
+            </ul>
         </div>
+        <button onclick="closeHelp()" style="margin-top: 15px; padding: 8px 15px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; float: right;">閉じる</button>
     </div>
+</div>
 
     <script src="travel.js"></script>
 </body>
